@@ -1,0 +1,16 @@
+{
+	"name": "prePOS",
+	"short_name": "prePOS",
+	"display": "fullscreen",
+	"start_url": "./",
+	"scope": ".",
+	"theme_color": "#000",
+	"background_color": "#000",
+	"icons":[
+        {
+            "src": "logo.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        }
+	]
+}
