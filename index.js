@@ -1,237 +1,150 @@
-let rows = 0;
-let buttonid = 0;
-let selected = -1;
-let CURRENTMENU = "NONE"
-let currentBill
-let currentBillPrice
+// October 31
+var CURRENTVERSION = 1.10311;
+
+// Only used on the terminal out screen
+
+var OVERLAY_CAN_BE_HIDDEN = true;
+var rows = 0;		// Rows on card
+var buttonid = 0;	// Table datum ID
+var selected = -1;	// Selected table datum
+var CURRENTMENU = "NONE";
+var MAXLENGTH = 0;	// Length of numerical input
+var currentBill;	// Selected bill table datum
+var currentBillPrice;	// And its pricei
 
 // Dialog
-let cancelFunction = "hideOverlay()"
+let cancelFunction;
+
+window.onerror = function (event) {
+	simplePrompt(event);
+}
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', {
 	style: 'currency',
 	currency: 'USD'
 });
 
-let COLD_REG = ["330ml Can", "500ml Bottle", "Energy Drink", "Fuze Iced Tea", "Ice Cream Spider"]
-let COLD_PRICE = [220, 330, 240, 320, 410]
-
-let COLD_SHAKE = ["Banana Shake", "Choc Shake", "Strawberry Shake", "Vanilla Shake", "Banana Frappé", "Choc Frappé", "Strawberry Frappé", "Vanilla Frappé"]
-let COLD_SHAKE_PRICE = [380, 380, 380, 350, 650, 650, 650, 620]
-
-let BF_YOUNG = ["Bacon Egg Toast", "Toasted S/W", "Pancakes", "Waffles Meal", "Hash Brown Meal"]
-let BF_YOUNG_PRICE = [580, 450, 750, 800, 500]
-
-let BF_BURGER = ["Cheese Burger", "Veggie Burger", "B.E.C. Floppy", "S.E.C. Floppy", "B.E.C. Muffin"]
-let BF_BURGER_PRICE = [400, 430, 480, 480, 600]
-
-let BF_DRINK = ["Brekkie Hot Choc", "Iced Coffee", "Fluffy Milk Shot"];
-let BF_DRINK_PRICE = [200, 520, 150];
-
-let LUNCH = ["Cheesy Bacon Burger", "Display Item", "Eggs Benedict", "Fries, Scoop of", "Wedges, Scoop of", "Nacho Meal"]
-let LUNCH_PRICE = [600, -1, 1500, 280, 320, 1200]
-
-let DESSERT_MODS = ["Strawberry Jam", "Apricot Jam", "Raspberry Jam", "&empty;"]
-let LUNCH_MODS = ["Xtra Salt", "Tomato Slices", "Egg", "Custard", "Bacon Strip", "Cheese", "Mushrooms", "Maple Syrup", "Whipped Cream"]
-let LUNCH_MODS_2 = ["Xtra", "Less", "Remove", "Only", "Lettuce, Shredded", "Lettuce Leaves"]
-let LUNCH_MODS_PRICE = [5, 10, 25, 10, 40, 30, 50, 15, 20, 30]
-let LUNCH_MODS_2_PRICE = [null, null, null, 25]
-
-let DESSERT = ["Banana Split", "Choc Sundae", "Fruit Salad Custard", "Snow Freeze", "Tartlets"]
-let DESSERT_PRICE = [1600, 900, 550, 150, 550]
-
-let firstTick = true;
-
-let CAFE = ["Cappuccino", "Flat White", "Hot Chocolate", "Latte", "Mocha", "Long Black"]
-let CAFE_PRICE = [450, 480, 250, 450, 450, 420]
-
-let LUNCH_BURGER = ["Cheeseburger", "BLT Burger", "BLT Supreme", "<i>Cor impetum</i> Burger", "Salad Burger"]
-let LUNCH_BURGER_PRICE = [BF_BURGER_PRICE[0], 500, 600, 580, 710, 580]
-
-let TEA = ["Black Tea", "Chai Latte", "Dilmah Tea"]
-let TEA_PRICE = [390, 440, 410]
-
-let SIZE = ["Medium Cup Upgrade", "Large Cup Upgrade", "Small Go‑Cup", "Medium Go‑Cup", "Large Go‑Cup"]
-let SIZE_PRICE = [50, 100, 20, 80, 130]
-
-let MODS = ["Choc Powder", "Cinn Powder", "Modify Above", "Caramel Syrup Shot", "Hazelnut Syrup Shot", "Xtra Cream", "Warm, Serve as", "Xtra Hot, Serve as"]
-let MODS_PRICE = [10, 10, 0, 60, 60, 0, 0, 0]
-let MODS_SUGAR = ["1 Sugar", "2 Sugars", "3 Sugars", "4 Sugars", "No Sugar"]
-let MODS_MILK = ["Dairy Milk", "No Milk", "Almond Milk", "Coconut Milk", "Soy Milk", "Trim Milk"]
-
-let DISCOUNT = ["10 Loyalty pts.", "50 Loyalty pts.", "100 Loyalty pts.", "250 Loyalty pts.", "Half-price Item", "Free Item"]
-let DISCOUNT_PRICE = [-10, -50, -100, -250, null, null];
-
 function plog(object) {
 	console.log(object);
 	document.getElementById("log").innerHTML = `${object}`;
 }
 
-function initialize() {
-
-	document.getElementById("selectMenu").onchange = function () {
-		eval(`${document.getElementById("selectMenu").value}`);
-	}
-	showColdDrinks();
-	newRow();
-	initialize = null;
-}
-
-
-document.addEventListener("dblclick", (event) => {
-	event.preventDefault();
-	plog(event);
-	
-	if (event.srcElement.nodeName == "TD") {
-		event.srcElement.innerHTML = "&empty;"; // Set item to empty set symbol
-		document.getElementById(`price${parseInt(event.srcElement.id)}`).innerHTML = "&mdash;"; // Set price to em dash
-		updatePrice(); // Keep total relevant
-	}
-});
-
-document.addEventListener("contextmenu", (event) => {
-	event.preventDefault();
-	plog(event);
-	
-	if (event.srcElement.nodeName == "TD") {
-		event.srcElement.innerHTML = "&empty;"; // Set item to empty set symbol
-		document.getElementById(`price${parseInt(event.srcElement.id)}`).innerHTML = "&mdash;"; // Set price to em dash
-		updatePrice(); // Keep total relevant
-	}
-});
-
-// Shows the lastest result from the console at the bottom of the screen
-document.addEventListener("contextmenu", (event) => {
-	event.preventDefault();
-	plog(event);
-
- 	if (event.srcElement.className == "CATBTN" && event.srcElement.innerHTML == "∅") {
-		simplePrompt("Debug mode activated");
-		document.getElementById("log").style.display = "block";
-	}
-})
-
 // Get time
-async function getTime() {
+let getTime = () => {
 	let d = new Date().toLocaleString('en-US', {
 		timeZone: 'Pacific/Auckland'
 	});
 	document.getElementById("time").innerHTML = d;
+};
+
+let initialize = () => {
+	// VERSION
+	document.title = `prePOS ${CURRENTVERSION} &ndash; `
+	document.getElementById("version").innerHTML = `${CURRENTVERSION} &ndash; `;
+	if ("serviceWorker" in navigator) {
+		navigator.serviceWorker && navigator.serviceWorker.register("./sw.js").catch( function () {
+			simplePrompt("PREpos is lffoine")
+
+			// offline
+			document.title = `prePOS ${CURRENTVERSION} (offline) &ndash; Provision Package: ${PKG}`
+			document.getElementById("version").innerHTML = `${CURRENTVERSION} (offline)`;
+			document.getElementById("time").remove();
+		});
+	}
+    
+    showLunchMenu();
+    
+    // Hide overlay if click occurs outside of box
+    document.getElementById("overlay").onclick = function (event) {
+        if(event.target.id == "overlay") {
+            if(OVERLAY_CAN_BE_HIDDEN) {
+				hideOverlay();
+			}
+        }
+    };
+
+	newRow(true);
+	initialize = null;
+};
+
+let selectMenu = () => {
+	promptBox(null, ["Cold Drinks", "Café Drinks", "Breakfast Menu", "Lunch Menu", "Café Modifiers", "Lunch Modifiers"],
+	["showColdDrinks()", "showHotDrinks()", "showBreakfast()", "showLunchMenu()", "showModMenu()", "showLunchMods()"],
+      	"Promotions", "showMisc()", "Select menu", true);
+}
+
+document.onkeydown = function (e) {
+	simplePrompt("Keyboard input is not supported")
+	e.preventDefault();
+}
+
+// Selection of things
+document.addEventListener("click", (event) => {
+	let btn = event.target;
+
+	// Isolate
+	if(btn.id.includes("bill") || btn.id.includes("price")) return;
+
+	if(btn.nodeName == "TD") {
+		// Disable selecting on tender screen
+		if (document.getElementById("showOnTender").style.display == "block") return;
 	
-}
-setInterval(getTime, 1000);
+		// Reset the style of the other selected button
+		document.getElementById(selected).removeAttribute("style");
+		resetBorder(document.getElementById(selected));
+
+		// Style the current button
+		selected = parseInt(btn.id);
+		btn.style.backgroundColor = "yellow";
+		selectBorder(btn);
+	}
+});
+
+// Shows the latest result from the console at the bottom of the screen
+document.addEventListener("contextmenu", (event) => {
+	event.preventDefault();
+
+ 	if (event.target.className == "CATBTN" && event.target.innerHTML == "∅") {
+		simplePrompt("Debug mode activated");
+		document.getElementById("log").style.display = "block";
+	}
+
+	// Shorthand reference
+	let btn = event.target;
+
+	// Isolate
+	if(btn.id.includes("bill") || btn.id.includes("price")) return;
 
 
-// Menu functions
-
-// COLD DRINKS & SHAKES
-function showColdDrinks() {
-	CURRENTMENU = "COLD";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1");
-	let line2 = document.getElementById("ITEMLINE2");
-	let line3 = document.getElementById("ITEMLINE3");
-
-	createLineButtons(COLD_REG, COLD_PRICE, line1);
-	createLineButtons(COLD_SHAKE, COLD_SHAKE_PRICE, line2);
-	createLineButtons(SIZE, SIZE_PRICE, line3);
-}
-
-// CAFÉ DRINKS
-function showHotDrinks() {
-	CURRENTMENU = "HOT";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1")
-	let line2 = document.getElementById("ITEMLINE2")
-	let line3 = document.getElementById("ITEMLINE3")
-
-	// 1st line: Coffees
-	// 2nd line: Teas
-	// 3rd line Prices
-	createLineButtons(CAFE, CAFE_PRICE, line1);
-	createLineButtons(TEA, TEA_PRICE, line2);
-	createLineButtons(SIZE, SIZE_PRICE, line3);
-}
-
-// BREAKFAST
-function showBreakfast() {
-	CURRENTMENU = "BREAKFAST";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1");
-	let line2 = document.getElementById("ITEMLINE2");
-	let line3 = document.getElementById("ITEMLINE3");
-
-	createLineButtons(BF_YOUNG, BF_YOUNG_PRICE, line1);
-	createLineButtons(BF_BURGER, BF_BURGER_PRICE, line2);
-	createLineButtons(BF_DRINK, BF_DRINK_PRICE, line3);
-}
-
-// LUNCH & DESSERTS
-function showLunchMenu() {
-	CURRENTMENU = "LUNCH";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1");
-	let line2 = document.getElementById("ITEMLINE2");
-	let line3 = document.getElementById("ITEMLINE3");
-
-	createLineButtons(LUNCH, LUNCH_PRICE, line1);
-	createLineButtons(LUNCH_BURGER, LUNCH_BURGER_PRICE, line2);
-	createLineButtons(DESSERT, DESSERT_PRICE, line3);
+	if(btn.nodeName == "TD") {
+		// Disable selecting on tender screen
+		if (document.getElementById("showOnTender").style.display == "block") return;
 	
-}
+		// Reset the style of the other selected button
+		document.getElementById(selected).removeAttribute("style");
+		resetBorder(document.getElementById(selected));
 
-// LUNCH MODIFY
-function showLunchMods() {
-	CURRENTMENU = "LMODS";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1");
-	let line2 = document.getElementById("ITEMLINE2");
-	let line3 = document.getElementById("ITEMLINE3");
-
-	createLineButtons(DESSERT_MODS, null, line1);
-	createLineButtons(LUNCH_MODS_2, LUNCH_MODS_2_PRICE, line2);
-	createLineButtons(LUNCH_MODS, LUNCH_MODS_PRICE, line3);
-	
-}
-
-// CAFÉ MODIFY
-function showModMenu() {
-	CURRENTMENU = "MOD";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1");
-	let line2 = document.getElementById("ITEMLINE2");
-	let line3 = document.getElementById("ITEMLINE3");
-
-	createLineButtons(MODS_MILK, null, line1);
-	createLineButtons(MODS_SUGAR, null, line2);
-	createLineButtons(MODS, MODS_PRICE, line3);
-}
-
-// PROMO MENU
-function showMisc() {
-	CURRENTMENU = "PROMO";
-
-	clearItemLines();
-	let line1 = document.getElementById("ITEMLINE1");
-	let line2 = document.getElementById("ITEMLINE2");
-	let line3 = document.getElementById("ITEMLINE3");
-
-	createLineButtons(DISCOUNT, DISCOUNT_PRICE, line1);
-}
+		// Style the current button
+		selected = parseInt(btn.id);
+		btn.style.backgroundColor = "yellow";
+		selectBorder(btn);
+		
+		// Clearance
+		promptBox("Select clearance type", ["Hide price", "Insert promo marker"],
+				[`document.getElementById("price${event.target.id}").innerHTML="&mdash;"; updateTotal();`, `document.getElementById("price${event.target.id}").innerHTML="PROMO"; updateTotal();`],
+				"Remove item", `addSelect("&empty;")`,null,true)
+	}
+});
 
 // SB buttons begin
 
 // New Row
-function newRow(that) {
-	if (rows > 7) {
-		newRow = function () { simplePrompt("Too many rows") };
-		return;
+function newRow(bypass) {
+	if(bypass != true) {
+		if (rows > 7 && document.getElementById("TBODY").clientHeight+149 > document.getElementById("itemtable").clientHeight) {
+			promptBox("An additional row may exceed the screen boundary. Would you like to still add it?<br><b>Note: Rows cannot be removed</b>", ["Yes"], ["document.getElementById('TBODY').scrollTop = scroll.scrollHeight; newRow(true)"], null, null, null, true);
+			return;
+		}
 	}
 
 	tbody = document.getElementById("TBODY");
@@ -249,20 +162,7 @@ function newRow(that) {
 	let eles = [a, b, c, d];
 	for (let i = 0; i < eles.length; i++) {
 		eles[i].innerHTML = "&empty;"
-		eles[i].onclick = function() { // Creates selection code four times
-			// Disable selecting on tender screen
-			if (document.getElementById("showOnTender").style.display == "block") return;
-
-			// Reset the style of the other selected button
-			document.getElementById(selected).removeAttribute("style");
-			resetBorder(document.getElementById(selected));
-
-			// Style the current button
-			selected = parseInt(this.id);
-			plog(`Selected ${selected}`)
-			this.style.backgroundColor = "yellow";
-			selectBorder(this);
-		}
+		
 		eles[i].id = `${buttonid}`;
 		eles[i].className = "slot";
 		buttonid++;
@@ -275,16 +175,19 @@ function newRow(that) {
 	modPrice2 = document.createElement("td");
 	modPrice3 = document.createElement("td");
 
+
 	itemPrice.innerHTML = "—"
 	modPrice.innerHTML = "—"
 	modPrice2.innerHTML = "—"
 	modPrice3.innerHTML = "—"
+
 
 	// Limit height
 	itemPrice.style = "height: 15px;"
 	modPrice.style = "height: 15px;"
 	modPrice2.style = "height: 15px;"
 	modPrice3.style = "height: 15px;"
+
 
 	tr = document.createElement("tr");
 	tr.id = `PRICE_ROW_${rows}`;
@@ -300,7 +203,6 @@ function newRow(that) {
 	tr.append(modPrice);
 	tr.append(modPrice2);
 	tr.append(modPrice3);
-
 
 	rows = rows + 1;
 
@@ -321,26 +223,25 @@ function newRow(that) {
 
 // Verify status
 function checkStatus() {
-	let table = document.getElementById("tn").innerHTML
+	let table = document.getElementById("tn").innerHTML;
 
-	promptBox("Eat-In or Take Away?", ["Eat In", "Take Away"], 
-					  ["tableNumber();", "document.getElementById('tn').innerHTML = 'Take Away'; hideOverlay(); showTender()"],
-					  null, null, null, false);
+	promptBox("Press Eat-In", null, null, "Eat In", 
+					  "tableNumber();",
+					  null, false);
 }
 
 // Finish order
 function showTender() {
-	updatePrice();
+	updateTotal();
 
 	document.getElementById(selected).style.backgroundColor = "white";
 	resetBorder(document.getElementById(selected));
 
 	document.getElementById("hideOnTender").style.display = "none"
 	document.getElementById("showOnTender").style.display = "block"
-	document.getElementById("ct").innerHTML = updatePrice();
+	document.getElementById("ct").innerHTML = updateTotal();
 
 	updateRemaining();
-	plog("Displaying tender screen");
 }
 
 // Insert custom price
@@ -363,7 +264,7 @@ function customPrice() {
 		}
 
 	}
-	updatePrice();
+	updateTotal();
 }
 
 // Reset order
@@ -374,14 +275,19 @@ function resetOrder() {
 // Tender screen functions begin
 
 // Table number
-function tableNumber() {
-	numericalPrompt("Input a number below", "document.getElementById('tn').innerHTML = \`Dine In &mdash; ${parseInt(document.getElementById('numerical-input').innerHTML)}\`; showTender()", "Table number locator");
+async function tableNumber() {
+	await delay(1); // This is also needed to display issuesf
+	numericalPrompt("Input table locator", "document.getElementById('tn').innerHTML = \`Dine In &mdash; ${parseInt(document.getElementById('numerical-input').innerHTML)}\`; showTender()", 2);
 }
 
 // Single bill
 function splitBillOnce() {
 	// Select first bill
 	selectBill(document.getElementById("bill1"));
+
+	// Hide
+	document.getElementById("splitBTN").style.display = "none";
+	document.getElementById("tender-btn").removeAttribute("style");
 
 	//Show bill and hide others
 	document.getElementById("bill1").style.display = "table-cell"
@@ -402,6 +308,10 @@ function splitBillTwice() {
 	// Select second bill
 	selectBill(document.getElementById("bill2"));
 
+	// Hide
+	document.getElementById("splitBTN").style.display = "none";
+	document.getElementById("tender-btn").removeAttribute("style");
+	
 	//Show bills and hide third
 	document.getElementById("bill1").style.display = "table-cell"
 	document.getElementById("bill2").style.display = "table-cell"
@@ -420,6 +330,10 @@ function splitBillThrice() {
 	// Select second bill (even though there are three, it's better to go in the middle)
 	selectBill(document.getElementById("bill2"));
 
+	// Hide
+	document.getElementById("splitBTN").style.display = "none";
+	document.getElementById("tender-btn").removeAttribute("style");
+
 	updateRemaining();
 	//Show bills
 	document.getElementById("bill1").style.display = "table-cell"
@@ -434,6 +348,64 @@ function splitBillThrice() {
 	document.getElementById("bill3Price").innerHTML = CURRENCY_FORMATTER.format(total / 3);
 
 	updateRemaining();
+}
+
+// Thanks, Stack Overflow!
+const delay = (delayInms) => {
+	return new Promise(resolve => setTimeout(resolve, delayInms));
+  };
+
+
+async function terminalOut(accepted) {
+	if(currentBill) {
+		document.getElementById("modify-order").style.display = "none";
+		document.getElementById("cancel-div").style.display = "none";
+		OVERLAY_CAN_BE_HIDDEN = false;
+	
+		simplePrompt("Please Insert, Tap, or Swipe card");
+		await delay(5000);
+
+		simplePrompt("Awaiting connection");
+		await delay(800);
+
+		simplePrompt("Talking to bank");
+		await delay(2000);
+
+		simplePrompt("Talking to card issuer");
+		await delay(1300);
+
+		simplePrompt("Contacting sales");
+		await delay(2000);
+
+
+		simplePrompt("Requesting authorisation from Server");
+		await delay(2000);
+
+		let ISSUER = ["Visa", "Mastercard", "ANZ Visa", "AMEX", "Maestro"][Math.floor(Math.random()*5)];
+
+		if (accepted) {
+			simplePrompt(`The card issuer (${ISSUER}) has successfully processed the transaction.`)
+
+			// Replace tender buttons with new order button
+			document.getElementById("tender-btn").remove();
+
+			document.getElementById("new-order").removeAttribute("style");
+
+			OVERLAY_CAN_BE_HIDDEN = true;
+			completeBill();
+			document.getElementById("cancel-div").removeAttribute("style");
+		} else {
+			simplePrompt(`The card issuer (${ISSUER}) refused to process the transaction.`);
+			currentBill.style.backgroundColor = "red";
+			OVERLAY_CAN_BE_HIDDEN = true;
+
+			// Reveal modify order and cancel button
+			document.getElementById("modify-order").removeAttribute("style");
+			document.getElementById("cancel-div").removeAttribute("style");
+		}
+	} else {
+		simplePrompt("Transaction could not be completed because no bill has been selected")
+	}
 }
 
 // Complete selected bill
@@ -458,12 +430,13 @@ function resetBills() {
 	currentBill = bill1;
 	bill1.style.backgroundColor = "yellow";
 	splitBillThrice();
-
-	plog("Bills have been reset");
 }
 
 // Return to menu screen
 function returnOrder() {
+	// Show split bill buttons
+	document.getElementById("splitBTN").removeAttribute("style");
+
 	document.getElementById(selected).style.backgroundColor = "yellow";
 	selectBorder(document.getElementById(selected)); // Retrieve styling for selected button
 
@@ -475,13 +448,14 @@ function returnOrder() {
 
 // Add selected items from the menu into the selected product slot
 function addSelect(object, price, special) {
-
-	if (object.includes("Energy Drink")) {
-		if(!special) {
-			promptBox("Please confirm consumer is over 16", ["Yes"], [`addSelect('Energy Drink', ${price}, true); hideOverlay();`]);
-			return;
+	try {
+		if (object.includes("Energy Drink")) {
+			if(!special) {
+				promptBox("Please confirm consumer is over 16", ["Yes"], [`addSelect('Energy Drink', ${price}, true);`], "No", null, null, true);
+				return;
+			}
 		}
-	}
+	} catch (e) {}
 
 	if (price) {
 		if (price >= 0) {
@@ -512,15 +486,15 @@ function addSelect(object, price, special) {
 	}
 	
 	// Add café suggestions
-	if(CURRENTMENU == "HOT") simplePrompt("Prompt for milk and sugar where applicable", "Helpful tip");
+	if(CURRENTMENU == "HOT") simplePrompt("Prompt for milk and sugar where applicable<br><ul><b>Exceptions</b><li>Long Black</li><li>Espresso Shot</li></ul>", "Helpful tip");
 	
 	// Modifiers from coffee
 	if (CURRENTMENU == "HOT") {
-		document.getElementById("selectMenu").value="showModMenu()";
-		showModMenu(document.getElementById("MODBTN"));
+		showModMenu();
+		showModMenu(document.getElementById("MODBTN")); // why is this here?
 	}
 
-	updatePrice();
+	updateTotal();
 }
 
 // Resets item lines upon opening a new menu
@@ -529,24 +503,16 @@ function clearItemLines() {
 	let line2 = document.getElementById("ITEMLINE2");
 	let line3 = document.getElementById("ITEMLINE3");
 
-	line1.innerHTML = ""
-	line2.innerHTML = ""
-	line3.innerHTML = ""
-	plog("Cleared item lines whilst changing to a menu")
+	line1.innerHTML = "";
+	line2.innerHTML = "";
+	line3.innerHTML = "";
 }
 
 // Runs pretty much every time something happens to keep the total relevant
-function updatePrice() {
+function updateTotal() {
 	let total = 0;
 	let priceBlocks = document.getElementsByTagName("td");
 	for (let i = 0; i < priceBlocks.length; i++) {
-		if (priceBlocks[i].id.includes("price")) {
-			let p = parseInt(100 * parseFloat(priceBlocks[i].innerHTML.replaceAll("$", "")));
-			if (!isNaN(p)) { // Prevents priceless items from breaking total
-				total += p;
-				plog([i, p, total])
-			}
-		}
 		
 		// Remove the extra item charge for "Remove" and "Less/Fewer" mods
 		if(priceBlocks[i].innerHTML == "Only"
@@ -615,27 +581,59 @@ function updatePrice() {
 				if(nextPrice.innerHTML == "—") { thisPrice.innerHTML="&mdash;"; return };
 			}
 		}
+
+		// Combos
+		else if (priceBlocks[i].innerHTML.includes("PROMO:")) {
+
+			if( ((i % 4) + 1) != 1) {
+				simplePrompt("Promo found in wrong place.<br>Do not put Combos outside ITEM columm")
+				return;
+			}
+			let comboFirst = document.getElementById(`price${parseInt(priceBlocks[i].id)+1}`);
+			let comboSecond = document.getElementById(`price${parseInt(priceBlocks[i].id)+2}`);
+
+			// Check for item
+			if (document.getElementById(parseInt(priceBlocks[i].id)+1).innerHTML != "∅") {
+				comboFirst.innerHTML = "PROMO"; // PROMO if item is set
+			} else { comboFirst.innerHTML = "&mdash;"; } // Otherwise empty the price
+
+			if (document.getElementById(parseInt(priceBlocks[i].id)+2).innerHTML != "∅") {
+				comboSecond.innerHTML = "PROMO"; // PROMO if item is set
+			} else { comboSecond.innerHTML = "&mdash;"; } // Otherwise empty the price
+		}
+
+		// Update price now that all that is over
+		if (priceBlocks[i].id.includes("price")) {
+			// Floating point fix: step 1
+			let p = parseInt(1000*priceBlocks[i].innerHTML.replaceAll("$", ""));
+						
+			if (!isNaN(p)) { // Prevents priceless items from breaking total
+				// Step 2
+				total += p / 10;
+				plog([i, p / 10, total]);
+			}
+		}
 		
 	}
 
-	document.getElementById("totalSpan").innerHTML = CURRENCY_FORMATTER.format(total / 100)
-	return CURRENCY_FORMATTER.format(total / 100)
+	document.getElementById("totalSpan").innerHTML = `${CURRENCY_FORMATTER.format(total / 100)} (${CURRENCY_FORMATTER.format((total/100) - (total / 115))} GST)`
+	return CURRENCY_FORMATTER.format(total / 100);
 }
 
 // Executes open opening a menu, creates all the product buttons.
 function createLineButtons(PRODUCT_ARRAY, PRICE_ARRAY, line) {
 	for (let i = 0; i < PRODUCT_ARRAY.length; i++) {
 		if (PRICE_ARRAY) {
-			if (PRICE_ARRAY[i]) {
-				line.innerHTML += `<button style=\"margin-left: -1px; margin-right: 5px\" onclick=\"addSelect(this.innerHTML, ${PRICE_ARRAY[i]})\" oncontextmenu=\"simplePrompt(\`<i>${PRODUCT_ARRAY[i]}</i><br>Cost: ${PRICE_ARRAY[i]}\`, \`Item information\`)\" class=\"CATBTN\">${PRODUCT_ARRAY[i]}</button>`;
+			// Show image if in menu
+			if(CURRENTMENU == "BREAKFAST" || CURRENTMENU == "LUNCH") {
+				line.innerHTML += `<button onclick="addSelect(this.innerHTML, ${PRICE_ARRAY[i]})" oncontextmenu="simplePrompt(\`<i>${PRODUCT_ARRAY[i]}</i><br>Cost: ${PRICE_ARRAY[i]}<br> <img src='images/${CURRENTMENU}/${PRODUCT_ARRAY[i]}.jpg'</img>\`, 'Item information')" class="CATBTN">${PRODUCT_ARRAY[i]}</button>`;
 			} else {
-				line.innerHTML += `<button style=\"margin-left: -1px; margin-right: 5px\" onclick=\"addSelect(this.innerHTML)\" class=\"CATBTN\">${PRODUCT_ARRAY[i]}</button>`;
+				line.innerHTML += `<button onclick="addSelect(this.innerHTML, ${PRICE_ARRAY[i]})" oncontextmenu="simplePrompt(\`<i>${PRODUCT_ARRAY[i]}</i><br>Cost: ${PRICE_ARRAY[i]}\`, 'Item information')" class="CATBTN">${PRODUCT_ARRAY[i]}</button>`;
 			}
 		} else {
-			line.innerHTML += `<button style=\"margin-left: -1px; margin-right: 5px\" onclick=\"addSelect(this.innerHTML)\" class=\"CATBTN\">${PRODUCT_ARRAY[i]}</button>`;
+			line.innerHTML += `<button onclick=\"addSelect(this.innerHTML)\" class=\"CATBTN\">${PRODUCT_ARRAY[i]}</button>`;
 		}
 	}
-	line.innerHTML += `<hr style="margin:1px;padding:0px">`;
 }
 
 // Used in the final stages of ordering
@@ -668,31 +666,30 @@ function selectBill(that) {
 	currentBill = that;
 	currentBill.style.backgroundColor = "yellow";
 	currentBillPrice = document.getElementById(`${currentBill.id}Price`);
-	plog(currentBillPrice);
 }
 
 // These are self-explanatory
 function resetBorder(element) {
 	element.style.border = ""; // Clear all
-	element.style.borderRight = "1px solid gray";
-	element.style.borderBottom = "1px solid gray";
+	element.style.borderRight = "1px solid lightgray";
+	element.style.borderBottom = "1px solid lightgray";
 	
 	let price = document.getElementById(`price${element.id}`);
 	if(price) {
 		price.style.border = ""; // Clear all
-		price.style.borderRight = "1px solid gray";
-		price.style.borderBottom = "1px solid gray";
+		price.style.borderRight = "1px solid lightgray";
+		price.style.borderBottom = "1px solid lightgray";
 		price.style.backgroundColor = "white"
 	}
 }
 
 function selectBorder(element) {
-	element.style.border = "1px dotted gray";
-	element.style.borderBottom = "1px dashed gray";
+	element.style.border = "1px dotted lightgray";
+	element.style.borderBottom = "1px dashed lightgray";
 	let price = document.getElementById(`price${element.id}`);
 	if(price) {
-		price.style.border = "1px dotted gray";
-		price.style.borderTop = "1px dashed gray";
+		price.style.border = "1px dotted lightgray";
+		price.style.borderTop = "1px dashed lightgray";
 		price.style.backgroundColor = "yellow"
 	}
 }
@@ -721,21 +718,27 @@ function simplePrompt(dialogText, dialogTitle) {
 	cancelFunction = `hideOverlay()` 
 	
 	// Grab variables
-	title.innerHTML = dialogTitle ? dialogTitle : "prePOS dialog title";
+	title.innerHTML = dialogTitle ? dialogTitle : `prePOS dialog title`;
 	text.innerHTML = dialogText ? dialogText : "prePOS dialog description";
-		
-	// Show prompt box
+
 	document.getElementById("overlay").removeAttribute("style");
 
 }
 
 function addNumerical(button) {
-	document.getElementById("numerical-input").innerHTML += button.innerHTML;
+
+	let input = document.getElementById("numerical-input");
+
+	if(MAXLENGTH && input.innerHTML.length < MAXLENGTH) {
+		input.innerHTML += button.innerHTML;
+	}
 }
 
 // Numerical prompt
 
-function numericalPrompt(dialogText, dialogFunc, dialogTitle) {
+function numericalPrompt(dialogText, dialogFunc, maxLength) {
+
+	MAXLENGTH = maxLength;
 
 	// Reset title, text and button
 	let title = document.getElementById("dialog-title");
@@ -748,16 +751,17 @@ function numericalPrompt(dialogText, dialogFunc, dialogTitle) {
 	document.getElementById("numerical-input").innerHTML = "";
 	
 	// Reset cancel button
-	cancel.innerHTML = "Done";
+	cancel.innerHTML = "Submit";
 	cancelFunction = `hideOverlay()` 
 	
 	// Grab variables
-	title.innerHTML = dialogTitle ? dialogTitle : "prePOS dialog title";
+	title.innerHTML = `prePOS numerical prompt (length: ${MAXLENGTH})`;
 	text.innerHTML = dialogText ? dialogText : "prePOS dialog description";
 	cancelFunction = dialogFunc ? `${dialogFunc}; hideOverlay()` : `hideOverlay()` 
 
-	// Show prompt
+	// Show prompt and reset position
 	document.getElementById("numerical-buttons").removeAttribute("style");
+
 	document.getElementById("overlay").removeAttribute("style");
 }
 
@@ -770,10 +774,14 @@ function promptBox(dialogText, dialogBts, dialogFunc, cancelText, cancelFunc, di
 	let cancel = document.getElementById("dialog-cancel");
 	let buttons = document.getElementById("dialog-buttons");
 
+	// Clear
+	buttons.innerHTML = "";
+	document.getElementById("numerical-input").innerHTML = "";
+
 	document.getElementById("numerical-buttons").style.display="none";
 
 	// Grab basic variables, fallback if not provided
-		title.innerHTML = dialogTitle ? dialogTitle : "prePOS dialog title";
+		title.innerHTML = dialogTitle ? dialogTitle : `prePOS dialog title`;
 		text.innerHTML = dialogText ? dialogText : "prePOS dialog description";
 		cancel.innerHTML = cancelText ? cancelText : "Close";
 
@@ -813,22 +821,25 @@ function promptBox(dialogText, dialogBts, dialogFunc, cancelText, cancelFunc, di
 						currentBtn.addEventListener("click", function () { eval(dialogFunc[i]); });
 					}
 					buttons.appendChild(currentBtn);
+					if(i==3) {
+						// Line break that actually works
+						let lineBrk = document.createElement("br");
+						buttons.appendChild(lineBrk);
+					}
 				} else {
 					simplePrompt(`Null value found at position ${i} in dialogFunc`, "Error");
 				}
 			}
 
 		}
-
 	}
-		
-	console.log(title.innerHTML, text.innerHTML, cancel.innerHTML, cancelFunction);
-
-
-
-
-	// Show prompt box
+	// Show prompt box and reset position
 	document.getElementById("overlay").removeAttribute("style");
+
+}
+
+function getNumericalInput() {
+	return parseInt(document.getElementById("numerical-input").innerHTML);
 }
 
 // Hides overlay for information messages
@@ -836,33 +847,40 @@ function hideOverlay() {
 	document.getElementById("overlay").style.display = "none";
 }
 
-/*
+// Charity donation
+function CHARITY_request() {
 
-Menu Function Template
-
-function showExampleMenu(that) {
-	CURRENTMENU = "MENU NAME"
-	clearItemLines();
-	
-	let line1= document.getElementById("ITEMLINE1");
-	let line2= document.getElementById("ITEMLINE2");
-	let line3= document.getElementById("ITEMLINE3");
-
-	try { LASTBUTTON.style.fontStyle="" } catch (e) {}
-	LASTBUTTON = that;
-	that.style.fontStyle="italic";
-	
-	for(let i =0;i<MENU BAR 1.length;i++) { createLineButton(MENU BAR 1[i], MENU BAR 1 PRICE[i], line1); }
-	for(let i =0;i<MENU BAR 2.length;i++) { createLineButton(MENU BAR 2[i], MENU BAR 2 PRICE[i], line2); }
-	for(let i =0;i<MENU BAR 3.length;i++) { createLineButton(MENU BAR 3[i], MENU BAR 3 PRICE[i], line3); }
+	// Get charity
+	promptBox("Select a charity", ["Red Cross", "InsideOUT LGBT", "KidsCan Trust", "LifeEdu Trust",
+									"Cancer Soc.", "Bowel Cancer", "Fred Hollows", "Stroke Found.",
+									"Autism NZ", "Hospice Waik.", "Epilepsy NZ"],
+	["CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)","CHARITY_select(this)"],
+																					"Youthline",
+																	"CHARITY_select(this)", null, false);
+}
+function CHARITY_select(charity) {
+	document.getElementById(selected).innerHTML = `Charity<br>(${charity.innerHTML})`;
+	CHARITY_requestAmount();
 }
 
-Change "showExampleMenu" to be relevant, and apply it to the onclick of the button.
-Change "MENU NAME" and "Sentence Case Menu Name" to their respective names.
-Change MENU BAR 1, 2, 3 to the arrays containing those lines.
-You do not need to use all three.
+async function CHARITY_requestAmount(charity) {
+	
+	await delay(1); // 
+	numericalPrompt("Insert a price to donate", "document.getElementById(`price${selected}`).innerHTML=CURRENCY_FORMATTER.format(getNumericalInput()/100); updateTotal()", 3);
+}
 
-*/
+// When the user scrolls the page, execute myFunction
+window.onscroll = function() {
+	// Get the header
+let header = document.getElementById("header");
+// Get the offset position of the navbar
+let sticky = header.offsetTop;
+  if (window.pageYOffset > sticky) {
+    header.classList.add("sticky");
+  } else {
+    header.classList.remove("sticky");
+  }
+};
 
 // Deprecated -- replaced by completeBill().
 //
@@ -877,3 +895,53 @@ You do not need to use all three.
 // function help() {
 //	promptBox("Use CATBTNs to change menu; click an item to put it in the selected slot (yellow).\nPress + to add a new item row.\nItems from HOT DRINKS menu open MODIFY menu if selected.\nOnce finished, open the tender screen, create the bills, and input each tender price into the terminal.\nPress Complete Selected Bill and repeat until the total remaining is $0.00, and the order has been fully paid.\nFinally, return to the order screen and reset the order.") 
 //}
+
+// Make the DIV element draggable:
+dragElement(document.getElementById("dialog"));
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    // if present, the header is where you move the DIV from:
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    // otherwise, move the DIV from anywhere inside the DIV:
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  async function elementDrag(e) {
+	// prevents visual artifacts
+	document.getElementById("dialog").style.display = "none";
+	await delay(0.1);
+	document.getElementById("dialog").style.display= "block";
+	// ends above
+
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    // stop moving when mouse button is released:
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
