@@ -1,16 +1,30 @@
 {
-	"name": "prePOS",
-	"short_name": "prePOS",
-	"display": "fullscreen",
-	"start_url": "./",
-	"scope": ".",
-	"theme_color": "#000",
-	"background_color": "#000",
-	"icons":[
-        {
-            "src": "logo.png",
-            "sizes": "256x256",
-            "type": "image/png"
-        }
-	]
+  "background_color": "#000000",
+  "description": "prePOS",
+  "dir": "ltr",
+  "start_url": "index.html?fullscreen=true",
+  "display": "fullscreen",
+  "name": "prePOS",
+  "orientation": "landscape",
+  "scope": "/prePOS",
+  "short_name": "prePOS",
+  "theme_color": "#000000",
+  "categories": [
+    "shopping"
+  ],
+  "screenshots": [],
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "256x256"
+    },
+    {
+      "src": "images/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "256x256"
+    }
+  ],
+  "shortcuts": [],
+  "lang": "en"
 }

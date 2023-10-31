@@ -1,159 +1,165 @@
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>prePOS 1.7261</title>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker && navigator.serviceWorker.register("./sw.js");
-        });
-      }
-    </script>
-    <script defer src="index.js"></script>
-    <link rel="stylesheet" href="index.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-    <meta name="msapplication-TileColor" content="#000000">
-    <meta name="msapplication-TileImage" content="./logo.png">
-    <meta name="msapplication-config" content="./browserconfig.xml">
-    <meta name="theme-color" content="#000000">
-    <link rel="shortcut icon" type="image/png" href="./logo.png" />
-  </head>
-  <body onload="initialize(); ">
-    <div tabindex="5" style="display: none" id="overlay">
-      <div id="dialog">
-        <h4 id="dialog-title" style="margin: 5px;"></h4>
-          <hr>
-          <p id="dialog-text"></p>
-          <hr>
-          <br>
-
-          <div id="numerical-buttons">
-            <span style="border-right: 1px solid black; width:80px" id="numerical-input">
-              
-            </span>
-            <br><br>
-            <button class="sb" onclick="addNumerical(this)">9</button>
-            <button class="sb" onclick="addNumerical(this)">8</button>
-            <button class="sb" onclick="addNumerical(this)">7</button>
-            <br>
-            <button class="sb" onclick="addNumerical(this)">6</button>
-            <button class="sb" onclick="addNumerical(this)">5</button>
-            <button class="sb" onclick="addNumerical(this)">4</button>
-            <br>
-            <button class="sb" onclick="addNumerical(this)">3</button>
-            <button class="sb" onclick="addNumerical(this)">2</button>
-            <button class="sb" onclick="addNumerical(this)">1</button>
-	    <br>
-	    <button class="sb" onclick="document.getElementById('numerical-input').innerHTML = ''">Clear</button>
-            <button class="sb" onclick="addNumerical(this)">0</button>
-            <button class="sb" onclick="addNumerical(this)" id="submit-input">-</button>	    
-	
-            <br><br>
-            <hr>
-            <br>
-          </div>
-	
-	  <div>
-          	<span id="dialog-buttons">
-
-          	</span>
-          	<button id="dialog-cancel" class="sb" onclick="eval(cancelFunction)">Close</button>
-          </div>
-      </div>
-    </div>
-    <!-- Left-side item table -->
-    <div style="border: 1px solid black; float: left; margin-right: 4px;" width="fit-content">
-      <div style="height: 96%; width: 320px">
-        <center>
-          <h4 style="padding:0px; margin:0px">prePOS &ndash; <span id="time">loading...</span>
-          </h4>
-          <table>
-            <tbody id="TBODY">
-              <tr>
-                <th>Item</th>
-                <th colspan="3" style="background-color: #300070; color: white">Modifiers</th>
-              </tr>
-            </tbody>
-          </table>
-        </center>
-      </div>
-      <!--table number -->
-      <div style="text-align:center">
-        <span id="tn">Not Set</span> | Total &ndash; <span id="totalSpan">$0.00</span>
-      </div>
-    </div>
-    <!-- Right-side categories, item lines, sb buttons -->
-    <div tabindex="-1" id="hideOnTender">
-      <div id="catBtns" style="padding-left: 0px; margin-left: 3px; float: top; width: 546px;">
-      <label for="selectMenu">Menu Select</label>
-      	<select name="selectMenu" id="selectMenu">
-      		<option value="showColdDrinks()">Cold Drinks</option>
-		      <option value="showHotDrinks()">Café Drinks</option>
-  		    <option value="showBreakfast()">Breakfast Menu</option>
-		      <option value="showLunchMenu()">Lunch Menu</option>
-	      	<option value="showLunchMods()">Lunch Modifiers</option>
-		      <option value="showModMenu()">Café Modifiers</option>
-		      <option value="showMisc()">Promotions</option>
-      	</select>
-        
-        <hr style="margin-top: 1px">
-      </div>
-      <div style="margin-left: 3px; float: top">
-        <div style="padding: 1px; height: 52px" id="ITEMLINE1"></div>
-        <hr>
-        <div style="padding: 1px; height: 52px" id="ITEMLINE2"></div>
-        <hr>
-        <div style="padding: 1px; height: 52px" id="ITEMLINE3"></div>
-      </div>
-      <div style="margin-top: 2px; margin-left: 3px; float: top">
-        <hr style="margin-top: -2px; margin-bottom: 1px">
-        <button style="font-weight:700; background-color:chartreuse" class="sb" onclick="newRow(this)">Create line</button>
-        <button class="sb" onclick="numericalPrompt('Insert a value in cents:', 'customPrice()')">Insert custom price</button>
-        <button onclick="checkStatus()" class="sb">Finish order</button>
-        <button style="font-weight:600; background-color: #FACADE" class="sb" onclick="resetOrder()">Reset order</button>
-      </div>
-    </div>
-    <!-- Tender screen -->
-    <div id="showOnTender" style="display: none">
-      <center>
-        <h2>Billing and transaction consummation</h2>
-        <h3>Subtotal: <span id="ct">$0.00</span>
-        </h3>
-        <table>
-          <tbody>
-            <tr>
-              <td onclick="selectBill(this)" id="bill1">Bill 1: <br>
-                <span id="bill1Price">Awaiting split</span>
-              </td>
-              <td onclick="selectBill(this)" id="bill2">Bill 2: <br>
-                <span id="bill2Price">Awaiting split</span>
-              </td>
-              <td onclick="selectBill(this)" id="bill3">Bill 3: <br>
-                <span id="bill3Price">Awaiting split</span>
-              </td>
-            </tr>
-          </tbody>
-        </table> Click bill to select <div id="tenderButtonRows">
-          <div id="splitBTN">
-            <button onclick="splitBillOnce()" class="CATBTN">Single bill</button>
-            <button onclick="splitBillTwice()" class="CATBTN">Two bills</button>
-            <button onclick="splitBillThrice()" class="CATBTN">Split thrice</button>
-          </div>
-          <button onclick="completeBill()" class="CATBTN">Complete selected bill</button>
-          <button onclick="resetBills()" class="CATBTN">Reset bills</button>
-          <button onclick="returnOrder()" class="CATBTN">Return to menu screen</button>
-        </div>
-        <br>
-        <h4>Total remaining: <span id="tr">$0.00</span>
-        </h4>
-      </center>
-    </div>
-    <footer style="left: 25%; position: absolute; bottom: 0;">
-      <div>
-        <h4 id="log" style="display:none"></h4>
-      </div>
-    </footer>
-    <!-- </body> -->
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>prePOS</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" ref="https://fonts.googleapis.com/css2?family=Roboto">
+		<script defer src="index.js"></script>
+		<script defer src="scripts/menu.js"></script>
+		<script defer src="scripts/menu_functions.js"></script>
+		<link rel="stylesheet" href="index.css">
+		<link rel="icon" type="image/x-icon" href="images/favicon.ico">
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, viewport-fit=cover">
+		<meta name="msapplication-TileColor" content="#FACADE">
+		
+		<meta name="msapplication-TileImage" content="./logo.png">
+		<meta name="msapplication-config" content="./browserconfig.xml">
+		<link rel="shortcut icon" type="image/png" href="./logo.png" />
+	</head>
+	<body onload="initialize();">
+		<div id="overlay">
+			<div id="dialog">
+				<h4 id="dialog-title" style="cursor: default; margin: 5px;">Alert</h4>
+				<hr>
+				<p style="cursor: default" id="dialog-text">This dialog box will automatically disappear unless there is an error</p>
+				
+				<div style="display: none" id="numerical-buttons">
+					<hr style="padding: -5px; margin: -5px">
+					<br>
+					<span style="cursor: text; border-right: 1px solid gray; width:80px" id="numerical-input">
+						<!-- Input goes here -->
+					</span>
+					<br>
+					<br>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">1</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">2</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">3</button>
+					<br>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">4</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">5</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">6</button>
+					<br>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">7</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">8</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">9</button>
+					<br>
+					<button type="button" class="sb_num" onclick="document.getElementById('numerical-input').innerHTML = ''">C</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)">0</button>
+					<button type="button" class="sb_num" onclick="addNumerical(this)" id="submit-input">&ndash;</button>
+					<br><br>
+					
+				</div>
+				<div style="margin-top: -10px; margin-bottom: 1px;">
+					<span id="dialog-buttons"></span>
+					<div id="cancel-div">
+						<hr style="padding-bottom: -3px; margin-top: 20px">
+					<br>
+						<button id="dialog-cancel" class="sb" onclick="eval(cancelFunction)">Close</button>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		<!-- Left-side item table -->
+		<div id="itemtable" style="width: 25%; max-width:25%; border: 1px solid black; float: left; margin-right: 4px;">
+			<div id="table_above" style="text-align: center;">
+				<h3 id="header" style="padding:0px; margin-top: -0px; margin-bottom:-1px">prePOS <span id="version"> &ndash; </span><span id="time">loading...</span></h3>
+			</div>
+			<div id="table_inside" style="height: 95%; overflow-y: overlay">
+				<center>
+					</h4>
+					<table style="width: 100%">
+						<thead>
+							<tr>
+							<th>Item</th>
+							<th colspan="3" style="background-color: #300070; color: white">Modifiers</th>
+						</tr>
+						</thead>
+						<tbody id="TBODY"></tbody>
+					</table>
+				</center>
+			</div>
+			<!--table number -->
+			<div style="text-align:center">
+				<span id="tn">Not Set</span> | <span id="totalSpan">$0.00 ($0.00 GST)</span>
+			</div>
+		</div>
+		<!-- Right-side categories, item lines, sb buttons -->
+		<div id="hideOnTender">
+			<div id="catBtns" style="float: left; padding-left: 0px; margin-left: 0px">
+				<div id="catHead" style="width: fit-content; margin-bottom: -2px; padding-bottom: 1px; border-bottom: 1px solid gray;">
+					<p id="CURRENTMENU" style="margin: 0px; padding: 0px">Current Menu: LUNCH</p>
+					<button onclick="selectMenu()">Change Selected Menu</button>
+				</div>
+				<div style="float: none; margin-left: -1px">
+					<div style="margin-bottom: -5px">
+						<div id="ITEMLINE1"></div>
+					</div>
+					<div style="margin-bottom: -5px">
+						<div id="ITEMLINE2"></div>
+					</div>
+					<div>
+						<div id="ITEMLINE3"></div>
+					</div>
+				</div>
+				<div style="margin-top: -2px; margin-left: -1px">
+					<button style="font-weight:700; background-color: chartreuse" class="sb" onclick="newRow()">Create line</button>
+					<button class="sb" onclick="numericalPrompt('Insert a value in cents:', 'customPrice()', 4)">Insert custom price</button>
+					<button style="font-weight:700; background-color: yellow" class="sb" onclick="CHARITY_request()">Charity</button>
+					<button onclick="checkStatus()" class="sb">Finish order</button>
+					<button style="font-weight:600; background-color: #FACADE" class="sb" onclick="resetOrder()">Reset order</button>
+				</div>
+			</div>
+		</div>
+		<!-- Tender screen -->
+		<div id="showOnTender" style="display: none">
+			<center>
+				<h2>Billing and transaction consummation</h2>
+				<h3>Subtotal: <span id="ct">$0.00</span>
+				</h3>
+				<table>
+					<tbody>
+						<tr>
+							<td onclick="selectBill(this)" id="bill1">Bill 1: <br>
+								<span id="bill1Price">Awaiting split</span>
+							</td>
+							<td onclick="selectBill(this)" id="bill2">Bill 2: <br>
+								<span id="bill2Price">Awaiting split</span>
+							</td>
+							<td onclick="selectBill(this)" id="bill3">Bill 3: <br>
+								<span id="bill3Price">Awaiting split</span>
+							</td>
+						</tr>
+					</tbody>
+				</table> 
+				<p>Click bill to select</p>
+				<div id="tenderButtonRows">
+					<div id="splitBTN">
+						<button onclick="splitBillOnce()" class="CATBTN">Single bill</button>
+						<button onclick="splitBillTwice()" class="CATBTN">Two bills</button>
+						<button onclick="splitBillThrice()" class="CATBTN">Split thrice</button>
+					</div>
+					<div style="display: none" id="tender-btn">
+																<!-- Accepted							Declined -->
+						<button id="terminal-out" onclick="terminalOut(true)" oncontextmenu="terminalOut(false)" class="CATBTN">Terminal out</button>
+						<button id="reset-bills" onclick="resetBills()" class="CATBTN">Reset bills</button>
+						<button id="modify-order" onclick="returnOrder()" class="CATBTN">Modify Order</button>
+					</div>
+					<button id="new-order" style="display:none" onclick="location.reload()">New<br>Order</button>
+				</div>
+				<br>
+				<h4>Total remaining: <span id="tr">$0.00</span>
+				</h4>
+			</center>
+		</div>
+		<footer style="left: 25%; position: absolute; bottom: 0;">
+			<div>
+				<h4 id="log" style="display:none"></h4>
+			</div>
+		</footer>
+		<!-- </body> -->
 </html>
